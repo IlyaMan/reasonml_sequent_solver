@@ -1,0 +1,26 @@
+{
+  "name": "sequences",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "bsb -make-world",
+    "start": "bsb -make-world -w",
+    "clean": "bsb -clean-world"
+  },
+  "keywords": [
+    "BuckleScript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "bs-platform": "^5.0.0",
+    "bsb-native": "^4.0.7000"
+  },
+  "dependencies": {
+    "dagre": "^0.8.4",
+    "raphael": "^2.2.8",
+    "reprocessing": "^0.3.1",
+    "treantjs": "^1.0.0",
+    "vis": "^4.21.0",
+    "viz": "^0.0.1"
+  }
+}
