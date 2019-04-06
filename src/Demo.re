@@ -10,6 +10,20 @@ type sequent = {
   right: list(formula),
 };
 
+/* Stolen from SO */
+let rec join = (char: string, list: list(string)): string => {
+  switch (list) {
+  | [] => ""
+  | [tail] => tail
+  | [head, ...tail] => head ++ char ++ join(char, tail)
+  };
+};
+
+let fToSeq = f => {
+  {left: [], right: [f]};
+};
+/**/
+
 let seqToString = (seq: sequent) => {
   let rec helper = formula => {
     switch (formula) {
@@ -20,16 +34,18 @@ let seqToString = (seq: sequent) => {
     | Implication(x, y) => "(" ++ helper(x) ++ " => " ++ helper(y) ++ ")"
     };
   };
-  fold_left((acc, el) => acc ++ helper(el) ++ ", ", "", seq.left)
-  ++ "-> "
-  ++ fold_left((acc, el) => acc ++ helper(el) ++ ", ", "", seq.right);
+
+  let left = join(", ", map(helper, seq.left));
+  let right = join(", ", map(helper, seq.right));
+  join(" ", [left, "->", right]);
 };
 
 let seqsToString = (list: list(sequent)) => {
   map(seqToString, list);
 };
 
-let straightChecker = (seq: sequent) => {
+let isStraight = (seq: sequent) => {
+  /*Checks if seq may be simplified by straight rules*/
   let straightLeftChecker = a =>
     switch (a) {
     | Not(_)
@@ -47,7 +63,8 @@ let straightChecker = (seq: sequent) => {
   || exists(straihtRightChecker, seq.right);
 };
 
-let complicatedChecker = (seq: sequent) => {
+let isComplicated = (seq: sequent) => {
+  /*Checks if seq may be simplified by branching rules*/
   let complicatedLeftChecker = (f: formula) =>
     switch (f) {
     | Or(_, _) => true
@@ -65,6 +82,7 @@ let complicatedChecker = (seq: sequent) => {
   || exists(complicatedRightChecker, seq.right);
 };
 
+/*Simplifies seq by straight rules*/
 let rec straightProcessor = (seq: sequent) => {
   let straigthLeftFolder =
       (acc: (list(formula), list(formula)), el: formula) => {
@@ -93,13 +111,14 @@ let rec straightProcessor = (seq: sequent) => {
 
   let res = {left: append(toLeft, l), right: r};
 
-  if (straightChecker(res)) {
+  if (isStraight(res)) {
     straightProcessor(res);
   } else {
     res;
   };
 };
 
+/*Simplifies seq by branching rules*/
 let complicatedProcessor = (seq: sequent) => {
   let rec rightIterator = (prev, curr, l) => {
     switch (curr) {
@@ -135,9 +154,10 @@ let complicatedProcessor = (seq: sequent) => {
   leftIterator([], seq.left, seq.right);
 };
 
+/*Recursive combination of processors*/
 let rec mainProcessor = (seq: sequent) => {
   let s1 = straightProcessor(seq);
-  if (complicatedChecker(s1)) {
+  if (isComplicated(s1)) {
     let s2 = complicatedProcessor(s1);
     flatten(map(mainProcessor, s2));
   } else {
@@ -147,7 +167,7 @@ let rec mainProcessor = (seq: sequent) => {
 
 let step = (seq: sequent) => {
   let s1 = straightProcessor(seq);
-  if (complicatedChecker(s1)) {
+  if (isComplicated(s1)) {
     complicatedProcessor(s1);
   } else {
     [s1];
@@ -175,21 +195,14 @@ let allRulesTestingSequent = {
   ],
 };
 
+/*The Formula*/
 let testFormula =
   Implication(
-    Implication(Or(Var("x"), Var("y")), Or(Var("p"), Var("q"))),
-    Or(Var("x"), Not(Var("y"))),
+    And(Or(Var("x"), Var("x")), Or(Var("x"), Var("x"))),
+    Or(Var("x"), Var("x")),
   );
 
 let starter = (f: formula) => {
-  let printer = res => {
-    Js.log("Left:");
-    iter(Js.log, res.left);
-    Js.log("Right:");
-    iter(Js.log, res.right);
-    Js.log("^^^^^");
-  };
-
   let badPrinter = res => {
     let seq = find(s => !axiomCheck(s), res);
     let helperPrinter = (num, el) =>
@@ -204,9 +217,5 @@ let starter = (f: formula) => {
   let seq = {left: [], right: [f]};
   let res = mainProcessor(seq);
   fold_left((acc, seq) => axiomCheck(seq) && acc, true, res)
-    ? iter(printer, res) : badPrinter(res);
-};
-
-let fToSeq = f => {
-  {left: [], right: [f]};
+    ? Js.log("Tautology") : badPrinter(res);
 };

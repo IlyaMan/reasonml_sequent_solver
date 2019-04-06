@@ -11,7 +11,7 @@ let nodes = []
 let edges = []
 
 function jsProcessor(seq, nodeId) {
-  if ((seq == undefined) || !P.straightChecker(seq) && !P.complicatedChecker(seq)) {
+  if ((seq == undefined) || !P.isStraight(seq) && !P.isComplicated(seq)) {
     return
   }
   let seqs = P.step(seq)

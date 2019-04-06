@@ -4,38 +4,69 @@
 var List = require("bs-platform/lib/js/list.js");
 var Block = require("bs-platform/lib/js/block.js");
 
+function join($$char, list) {
+  if (list) {
+    var tail = list[1];
+    var tail$1 = list[0];
+    if (tail) {
+      return tail$1 + ($$char + join($$char, tail));
+    } else {
+      return tail$1;
+    }
+  } else {
+    return "";
+  }
+}
+
+function fToSeq(f) {
+  return /* record */[
+          /* left : [] */0,
+          /* right : :: */[
+            f,
+            /* [] */0
+          ]
+        ];
+}
+
 function seqToString(seq) {
   var helper = function (formula) {
     switch (formula.tag | 0) {
-      case 0 : 
+      case 0 :
           return formula[0];
-      case 1 : 
+      case 1 :
           return "!" + helper(formula[0]);
-      case 2 : 
+      case 2 :
           return "(" + (helper(formula[0]) + (" && " + (helper(formula[1]) + ")")));
-      case 3 : 
+      case 3 :
           return "(" + (helper(formula[0]) + (" || " + (helper(formula[1]) + ")")));
-      case 4 : 
+      case 4 :
           return "(" + (helper(formula[0]) + (" => " + (helper(formula[1]) + ")")));
-      
+
     }
   };
-  return List.fold_left((function (acc, el) {
-                return acc + (helper(el) + ", ");
-              }), "", seq[/* left */0]) + ("-> " + List.fold_left((function (acc, el) {
-                  return acc + (helper(el) + ", ");
-                }), "", seq[/* right */1]));
+  var left = join(", ", List.map(helper, seq[/* left */0]));
+  var right = join(", ", List.map(helper, seq[/* right */1]));
+  return join(" ", /* :: */[
+              left,
+              /* :: */[
+                "->",
+                /* :: */[
+                  right,
+                  /* [] */0
+                ]
+              ]
+            ]);
 }
 
 function seqsToString(list) {
   return List.map(seqToString, list);
 }
 
-function straightChecker(seq) {
+function isStraight(seq) {
   var straightLeftChecker = function (a) {
     switch (a.tag | 0) {
-      case 1 : 
-      case 2 : 
+      case 1 :
+      case 2 :
           return true;
       default:
         return false;
@@ -43,8 +74,8 @@ function straightChecker(seq) {
   };
   var straihtRightChecker = function (a) {
     switch (a.tag | 0) {
-      case 0 : 
-      case 2 : 
+      case 0 :
+      case 2 :
           return false;
       default:
         return true;
@@ -57,11 +88,11 @@ function straightChecker(seq) {
   }
 }
 
-function complicatedChecker(seq) {
+function isComplicated(seq) {
   var complicatedLeftChecker = function (f) {
     switch (f.tag | 0) {
-      case 3 : 
-      case 4 : 
+      case 3 :
+      case 4 :
           return true;
       default:
         return false;
@@ -88,7 +119,7 @@ function straightProcessor(_seq) {
       var toRight = acc[1];
       var left = acc[0];
       switch (el.tag | 0) {
-        case 1 : 
+        case 1 :
             return /* tuple */[
                     left,
                     List.append(toRight, /* :: */[
@@ -96,7 +127,7 @@ function straightProcessor(_seq) {
                           /* [] */0
                         ])
                   ];
-        case 2 : 
+        case 2 :
             return /* tuple */[
                     List.append(left, /* :: */[
                           el[0],
@@ -122,7 +153,7 @@ function straightProcessor(_seq) {
       var toLeft = acc[0];
       var exit = 0;
       switch (el.tag | 0) {
-        case 1 : 
+        case 1 :
             return /* tuple */[
                     List.append(toLeft, /* :: */[
                           el[0],
@@ -130,11 +161,11 @@ function straightProcessor(_seq) {
                         ]),
                     right
                   ];
-        case 0 : 
-        case 2 : 
+        case 0 :
+        case 2 :
             exit = 1;
             break;
-        case 3 : 
+        case 3 :
             return /* tuple */[
                     toLeft,
                     List.append(right, /* :: */[
@@ -145,7 +176,7 @@ function straightProcessor(_seq) {
                           ]
                         ])
                   ];
-        case 4 : 
+        case 4 :
             return /* tuple */[
                     List.append(toLeft, /* :: */[
                           el[0],
@@ -156,7 +187,7 @@ function straightProcessor(_seq) {
                           /* [] */0
                         ])
                   ];
-        
+
       }
       if (exit === 1) {
         return /* tuple */[
@@ -167,7 +198,7 @@ function straightProcessor(_seq) {
                     ])
               ];
       }
-      
+
     };
     var match = List.fold_left(straigthLeftFolder, /* tuple */[
           /* [] */0,
@@ -183,7 +214,7 @@ function straightProcessor(_seq) {
       res_000,
       res_001
     ];
-    if (straightChecker(res)) {
+    if (isStraight(res)) {
       _seq = res;
       continue ;
     } else {
@@ -203,7 +234,7 @@ function complicatedProcessor(seq) {
       var tail = curr[1];
       var el = curr[0];
       switch (el.tag | 0) {
-        case 3 : 
+        case 3 :
             return /* :: */[
                     /* record */[
                       /* left */List.append(prev, /* :: */[
@@ -223,7 +254,7 @@ function complicatedProcessor(seq) {
                       /* [] */0
                     ]
                   ];
-        case 4 : 
+        case 4 :
             return /* :: */[
                     /* record */[
                       /* left */List.append(prev, /* :: */[
@@ -305,7 +336,7 @@ function complicatedProcessor(seq) {
 
 function mainProcessor(seq) {
   var s1 = straightProcessor(seq);
-  if (complicatedChecker(s1)) {
+  if (isComplicated(s1)) {
     var s2 = complicatedProcessor(s1);
     return List.flatten(List.map(mainProcessor, s2));
   } else {
@@ -318,7 +349,7 @@ function mainProcessor(seq) {
 
 function step(seq) {
   var s1 = straightProcessor(seq);
-  if (complicatedChecker(s1)) {
+  if (isComplicated(s1)) {
     return complicatedProcessor(s1);
   } else {
     return /* :: */[
@@ -339,20 +370,6 @@ function axiomCheck(seq) {
 }
 
 function starter(f) {
-  var printer = function (res) {
-    console.log("Left:");
-    List.iter((function (prim) {
-            console.log(prim);
-            return /* () */0;
-          }), res[/* left */0]);
-    console.log("Right:");
-    List.iter((function (prim) {
-            console.log(prim);
-            return /* () */0;
-          }), res[/* right */1]);
-    console.log("^^^^^");
-    return /* () */0;
-  };
   var seq_001 = /* right : :: */[
     f,
     /* [] */0
@@ -370,7 +387,8 @@ function starter(f) {
           }
         }), true, res);
   if (match) {
-    return List.iter(printer, res);
+    console.log("Tautology");
+    return /* () */0;
   } else {
     var res$1 = res;
     var seq$1 = List.find((function (s) {
@@ -394,16 +412,6 @@ function starter(f) {
     console.log("Unlisted variables (if any) may possess any value");
     return /* () */0;
   }
-}
-
-function fToSeq(f) {
-  return /* record */[
-          /* left : [] */0,
-          /* right : :: */[
-            f,
-            /* [] */0
-          ]
-        ];
 }
 
 var allRulesTestingSequent = /* record */[
@@ -460,26 +468,28 @@ var allRulesTestingSequent = /* record */[
 ];
 
 var testFormula = /* Implication */Block.__(4, [
-    /* Implication */Block.__(4, [
+    /* And */Block.__(2, [
         /* Or */Block.__(3, [
             /* Var */Block.__(0, ["x"]),
-            /* Var */Block.__(0, ["y"])
+            /* Var */Block.__(0, ["x"])
           ]),
         /* Or */Block.__(3, [
-            /* Var */Block.__(0, ["p"]),
-            /* Var */Block.__(0, ["q"])
+            /* Var */Block.__(0, ["x"]),
+            /* Var */Block.__(0, ["x"])
           ])
       ]),
     /* Or */Block.__(3, [
         /* Var */Block.__(0, ["x"]),
-        /* Not */Block.__(1, [/* Var */Block.__(0, ["y"])])
+        /* Var */Block.__(0, ["x"])
       ])
   ]);
 
+exports.join = join;
+exports.fToSeq = fToSeq;
 exports.seqToString = seqToString;
 exports.seqsToString = seqsToString;
-exports.straightChecker = straightChecker;
-exports.complicatedChecker = complicatedChecker;
+exports.isStraight = isStraight;
+exports.isComplicated = isComplicated;
 exports.straightProcessor = straightProcessor;
 exports.complicatedProcessor = complicatedProcessor;
 exports.mainProcessor = mainProcessor;
@@ -488,5 +498,4 @@ exports.axiomCheck = axiomCheck;
 exports.allRulesTestingSequent = allRulesTestingSequent;
 exports.testFormula = testFormula;
 exports.starter = starter;
-exports.fToSeq = fToSeq;
 /* No side effect */
