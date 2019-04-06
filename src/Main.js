@@ -78,3 +78,4 @@ var options = {
   }
 };
 var network = new vis.Network(container, data, options);
+console.log(nodes);

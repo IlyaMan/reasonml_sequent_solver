@@ -1,4 +1,49 @@
+open Array;
 open List;
+
+type node = {
+  id: int,
+  label: string,
+};
+type edge = {
+  from: int,
+  to_: int,
+};
+type dataset;
+[@bs.module "vis"] [@bs.new]
+external createDataset: array(node) => dataset = "DataSet";
+[@bs.module "vis"] [@bs.new]
+external createDataset_: array(edge) => dataset = "DataSet";
+
+let nodes: ref(array(node)) = ref([||]);
+let edges: ref(array(edge)) = ref([||]);
+
+let options = {
+  "layout": {
+    hierarchical: {
+      direction: "UD",
+      sortMethod: "directed",
+      levelSeparation: 100,
+      nodeSpacing: 400,
+    },
+  },
+  "interaction": {
+    dragNodes: false,
+  },
+  "physics": {
+    enabled: false,
+  },
+};
+
+type network;
+[@bs.module "vis"] [@bs.new]
+external createNetwork: ('container_t, 'data_t, 'options_t) => network =
+  "Network";
+
+type element;
+[@bs.val] [@bs.return nullable] [@bs.scope "document"]
+external getElementById: string => option(element) = "getElementById";
+
 type formula =
   | Var(string)
   | Not(formula)
@@ -195,6 +240,31 @@ let allRulesTestingSequent = {
   ],
 };
 
+let c = ref(0);
+let count = () => {
+  c := c^ + 1;
+  c^;
+};
+
+let rec jsProcessor = (seq, nodeId) =>
+  if (isStraight(seq) || isComplicated(seq)) {
+    let seqs = step(seq);
+    let formulas = seqsToString(seqs);
+    let c1 = count();
+    nodes := Array.append([|{id: c1, label: hd(formulas)}|], nodes^);
+    edges := Array.append([|{from: nodeId, to_: c1}|], edges^);
+    jsProcessor(hd(seqs), c1);
+
+    if (length(seqs) == 2) {
+      let c2 = count();
+      nodes := Array.append([|{id: c2, label: hd(formulas)}|], nodes^);
+      edges := Array.append([|{from: nodeId, to_: c2}|], edges^);
+      jsProcessor(hd(tl(seqs)), c2);
+    } else {
+      Js.log2(seqToString(hd(seqs)), seqToString(hd(tl(seqs))));
+    };
+  };
+
 /*The Formula*/
 let testFormula =
   Implication(
@@ -218,4 +288,16 @@ let starter = (f: formula) => {
   let res = mainProcessor(seq);
   fold_left((acc, seq) => axiomCheck(seq) && acc, true, res)
     ? Js.log("Tautology") : badPrinter(res);
+  jsProcessor(fToSeq(f), 0);
 };
+
+starter(testFormula);
+
+let data = {
+  "nodes": createDataset(nodes^),
+  "edges": createDataset_(edges^),
+};
+Js.log(nodes^);
+let network = createNetwork(getElementById("mynetwork"), data, options);
+
+network;
