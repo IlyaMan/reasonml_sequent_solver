@@ -10,21 +10,19 @@ type sequent = {
   right: list(formula),
 };
 
-let rec fToString = (seq: sequent) => {
+let seqToString = (seq: sequent) => {
   let rec helper = formula => {
     switch (formula) {
     | Var(x) => x
     | Not(x) => "!" ++ helper(x)
-    | And(x, y) => helper(x) ++ " && " ++ helper(y)
-    | Or(x, y) => helper(x) ++ " || " ++ helper(y)
-    | Implication(x, y) => helper(x) ++ " => " ++ helper(y)
+    | And(x, y) => "(" ++ helper(x) ++ " && " ++ helper(y) ++ ")"
+    | Or(x, y) => "(" ++ helper(x) ++ " || " ++ helper(y) ++ ")"
+    | Implication(x, y) => "(" ++ helper(x) ++ " => " ++ helper(y) ++ ")"
     };
   };
-  Js.log(
-    fold_left((acc, el) => acc ++ helper(el) ++ ", ", "", seq.left)
-    ++ "-> "
-    ++ fold_left((acc, el) => acc ++ helper(el) ++ ", ", "", seq.right),
-  );
+  fold_left((acc, el) => acc ++ helper(el) ++ ", ", "", seq.left)
+  ++ "-> "
+  ++ fold_left((acc, el) => acc ++ helper(el) ++ ", ", "", seq.right);
 };
 
 let straightChecker = (seq: sequent) => {
@@ -196,4 +194,4 @@ let starter = (f: formula) => {
     ? iter(printer, res) : badPrinter(res);
 };
 
-fToString(allRulesTestingSequent);
+seqToString(allRulesTestingSequent);

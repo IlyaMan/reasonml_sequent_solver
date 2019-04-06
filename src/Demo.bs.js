@@ -4,7 +4,7 @@
 var List = require("bsb-native/lib/js/list.js");
 var Block = require("bsb-native/lib/js/block.js");
 
-function fToString(seq) {
+function seqToString(seq) {
   var helper = function (formula) {
     switch (formula.tag | 0) {
       case 0 : 
@@ -12,20 +12,19 @@ function fToString(seq) {
       case 1 : 
           return "!" + helper(formula[0]);
       case 2 : 
-          return helper(formula[0]) + (" && " + helper(formula[1]));
+          return "(" + (helper(formula[0]) + (" && " + (helper(formula[1]) + ")")));
       case 3 : 
-          return helper(formula[0]) + (" || " + helper(formula[1]));
+          return "(" + (helper(formula[0]) + (" || " + (helper(formula[1]) + ")")));
       case 4 : 
-          return helper(formula[0]) + (" => " + helper(formula[1]));
+          return "(" + (helper(formula[0]) + (" => " + (helper(formula[1]) + ")")));
       
     }
   };
-  console.log(List.fold_left((function (acc, el) {
-              return acc + (helper(el) + ", ");
-            }), "", seq[/* left */0]) + ("-> " + List.fold_left((function (acc, el) {
+  return List.fold_left((function (acc, el) {
                 return acc + (helper(el) + ", ");
-              }), "", seq[/* right */1])));
-  return /* () */0;
+              }), "", seq[/* left */0]) + ("-> " + List.fold_left((function (acc, el) {
+                  return acc + (helper(el) + ", ");
+                }), "", seq[/* right */1]));
 }
 
 function straightChecker(seq) {
@@ -434,7 +433,7 @@ function starter(f) {
   }
 }
 
-fToString(allRulesTestingSequent);
+seqToString(allRulesTestingSequent);
 
 var testFormula = /* Implication */Block.__(4, [
     /* Implication */Block.__(4, [
@@ -453,7 +452,7 @@ var testFormula = /* Implication */Block.__(4, [
       ])
   ]);
 
-exports.fToString = fToString;
+exports.seqToString = seqToString;
 exports.straightChecker = straightChecker;
 exports.complicatedChecker = complicatedChecker;
 exports.straightProcessor = straightProcessor;
