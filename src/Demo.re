@@ -25,6 +25,10 @@ let seqToString = (seq: sequent) => {
   ++ fold_left((acc, el) => acc ++ helper(el) ++ ", ", "", seq.right);
 };
 
+let seqsToString = (list: list(sequent)) => {
+  map(seqToString, list);
+};
+
 let straightChecker = (seq: sequent) => {
   let straightLeftChecker = a =>
     switch (a) {
@@ -141,6 +145,15 @@ let rec mainProcessor = (seq: sequent) => {
   };
 };
 
+let step = (seq: sequent) => {
+  let s1 = straightProcessor(seq);
+  if (complicatedChecker(s1)) {
+    complicatedProcessor(s1);
+  } else {
+    [s1];
+  };
+};
+
 let axiomCheck = (seq: sequent) => {
   fold_left((acc, x) => mem(x, seq.right) || acc, false, seq.left);
 };
@@ -194,4 +207,6 @@ let starter = (f: formula) => {
     ? iter(printer, res) : badPrinter(res);
 };
 
-seqToString(allRulesTestingSequent);
+let fToSeq = f => {
+  {left: [], right: [f]};
+};
