@@ -1,12 +1,18 @@
 open Array;
 open List;
 
+[@bs.deriving abstract]
 type node = {
+  [@bs.as "id"]
   id: int,
+  [@bs.as "label"]
   label: string,
 };
+[@bs.deriving abstract]
 type edge = {
+  [@bs.as "from"]
   from: int,
+  [@bs.as "to"]
   to_: int,
 };
 type dataset;
@@ -55,6 +61,25 @@ type sequent = {
   right: list(formula),
 };
 
+/*The Formula*/
+let testFormula1 =
+  Implication(
+    And(Or(Var("x"), Var("x")), Or(Var("x"), Var("x"))),
+    Or(Var("x"), Var("x")),
+  );
+let testFormula2 =
+  Not(
+    Or(
+      Implication(And(Var("a"), Var("b")), Or(Var("a"), Var("b"))),
+      Not(Var("b")),
+    ),
+  );
+let testFormula3 =
+  And(
+    Implication(Or(Var("x"), Var("y")), And(Var("x"), Var("y"))),
+    And(Implication(Var("x"), Var("y")), Or(Var("x"), Var("y"))),
+  );
+
 /* Stolen from SO */
 let rec join = (char: string, list: list(string)): string => {
   switch (list) {
@@ -76,13 +101,13 @@ let seqToString = (seq: sequent) => {
     | Not(x) => "!" ++ helper(x)
     | And(x, y) => "(" ++ helper(x) ++ " && " ++ helper(y) ++ ")"
     | Or(x, y) => "(" ++ helper(x) ++ " || " ++ helper(y) ++ ")"
-    | Implication(x, y) => "(" ++ helper(x) ++ " => " ++ helper(y) ++ ")"
+    | Implication(x, y) => "(" ++ helper(x) ++ " -> " ++ helper(y) ++ ")"
     };
   };
 
   let left = join(", ", map(helper, seq.left));
   let right = join(", ", map(helper, seq.right));
-  join(" ", [left, "->", right]);
+  join(" ", [left, "|-", right]);
 };
 
 let seqsToString = (list: list(sequent)) => {
@@ -251,29 +276,24 @@ let rec jsProcessor = (seq, nodeId) =>
     let seqs = step(seq);
     let formulas = seqsToString(seqs);
     let c1 = count();
-    nodes := Array.append([|{id: c1, label: hd(formulas)}|], nodes^);
-    edges := Array.append([|{from: nodeId, to_: c1}|], edges^);
+
+    nodes := Array.append([|node(~id=c1, ~label=hd(formulas))|], nodes^);
+    edges := Array.append([|edge(~from=nodeId, ~to_=c1)|], edges^);
+
     jsProcessor(hd(seqs), c1);
 
-    if (length(seqs) == 2) {
+    if (length(formulas) == 2) {
       let c2 = count();
-      nodes := Array.append([|{id: c2, label: hd(formulas)}|], nodes^);
-      edges := Array.append([|{from: nodeId, to_: c2}|], edges^);
+      nodes :=
+        Array.append([|node(~id=c2, ~label=hd(tl(formulas)))|], nodes^);
+      edges := Array.append([|edge(~from=nodeId, ~to_=c2)|], edges^);
       jsProcessor(hd(tl(seqs)), c2);
-    } else {
-      Js.log2(seqToString(hd(seqs)), seqToString(hd(tl(seqs))));
     };
   };
 
-/*The Formula*/
-let testFormula =
-  Implication(
-    And(Or(Var("x"), Var("x")), Or(Var("x"), Var("x"))),
-    Or(Var("x"), Var("x")),
-  );
-
 let starter = (f: formula) => {
   let badPrinter = res => {
+    Js.log("Counterexample:");
     let seq = find(s => !axiomCheck(s), res);
     let helperPrinter = (num, el) =>
       switch (el) {
@@ -287,17 +307,19 @@ let starter = (f: formula) => {
   let seq = {left: [], right: [f]};
   let res = mainProcessor(seq);
   fold_left((acc, seq) => axiomCheck(seq) && acc, true, res)
-    ? Js.log("Tautology") : badPrinter(res);
+    ? Js.log("Sequent is general") : badPrinter(res);
+
+  nodes := Array.append([|node(~id=0, ~label=seqToString(seq))|], nodes^);
+
   jsProcessor(fToSeq(f), 0);
 };
-
-starter(testFormula);
+starter(testFormula1);
 
 let data = {
   "nodes": createDataset(nodes^),
   "edges": createDataset_(edges^),
 };
-Js.log(nodes^);
+
 let network = createNetwork(getElementById("mynetwork"), data, options);
 
 network;

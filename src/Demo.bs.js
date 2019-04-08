@@ -28,6 +28,23 @@ var options = {
   }
 };
 
+var testFormula1 = /* Implication */Block.__(4, [
+    /* And */Block.__(2, [
+        /* Or */Block.__(3, [
+            /* Var */Block.__(0, ["x"]),
+            /* Var */Block.__(0, ["x"])
+          ]),
+        /* Or */Block.__(3, [
+            /* Var */Block.__(0, ["x"]),
+            /* Var */Block.__(0, ["x"])
+          ])
+      ]),
+    /* Or */Block.__(3, [
+        /* Var */Block.__(0, ["x"]),
+        /* Var */Block.__(0, ["x"])
+      ])
+  ]);
+
 function join($$char, list) {
   if (list) {
     var tail = list[1];
@@ -64,7 +81,7 @@ function seqToString(seq) {
       case 3 : 
           return "(" + (helper(formula[0]) + (" || " + (helper(formula[1]) + ")")));
       case 4 : 
-          return "(" + (helper(formula[0]) + (" => " + (helper(formula[1]) + ")")));
+          return "(" + (helper(formula[0]) + (" -> " + (helper(formula[1]) + ")")));
       
     }
   };
@@ -73,7 +90,7 @@ function seqToString(seq) {
   return join(" ", /* :: */[
               left,
               /* :: */[
-                "->",
+                "|-",
                 /* :: */[
                   right,
                   /* [] */0
@@ -408,31 +425,30 @@ function jsProcessor(_seq, _nodeId) {
       var seqs = step(seq);
       var formulas = List.map(seqToString, seqs);
       var c1 = count(/* () */0);
-      nodes[0] = $$Array.append(/* array */[/* record */[
-              /* id */c1,
-              /* label */List.hd(formulas)
-            ]], nodes[0]);
-      edges[0] = $$Array.append(/* array */[/* record */[
-              /* from */nodeId,
-              /* to_ */c1
-            ]], edges[0]);
+      nodes[0] = $$Array.append(/* array */[{
+              id: c1,
+              label: List.hd(formulas)
+            }], nodes[0]);
+      edges[0] = $$Array.append(/* array */[{
+              from: nodeId,
+              to: c1
+            }], edges[0]);
       jsProcessor(List.hd(seqs), c1);
-      if (List.length(seqs) === 2) {
+      if (List.length(formulas) === 2) {
         var c2 = count(/* () */0);
-        nodes[0] = $$Array.append(/* array */[/* record */[
-                /* id */c2,
-                /* label */List.hd(formulas)
-              ]], nodes[0]);
-        edges[0] = $$Array.append(/* array */[/* record */[
-                /* from */nodeId,
-                /* to_ */c2
-              ]], edges[0]);
+        nodes[0] = $$Array.append(/* array */[{
+                id: c2,
+                label: List.hd(List.tl(formulas))
+              }], nodes[0]);
+        edges[0] = $$Array.append(/* array */[{
+                from: nodeId,
+                to: c2
+              }], edges[0]);
         _nodeId = c2;
         _seq = List.hd(List.tl(seqs));
         continue ;
       } else {
-        console.log(seqToString(List.hd(seqs)), seqToString(List.hd(List.tl(seqs))));
-        return /* () */0;
+        return 0;
       }
     } else {
       return 0;
@@ -440,25 +456,9 @@ function jsProcessor(_seq, _nodeId) {
   };
 }
 
-var testFormula = /* Implication */Block.__(4, [
-    /* And */Block.__(2, [
-        /* Or */Block.__(3, [
-            /* Var */Block.__(0, ["x"]),
-            /* Var */Block.__(0, ["x"])
-          ]),
-        /* Or */Block.__(3, [
-            /* Var */Block.__(0, ["x"]),
-            /* Var */Block.__(0, ["x"])
-          ])
-      ]),
-    /* Or */Block.__(3, [
-        /* Var */Block.__(0, ["x"]),
-        /* Var */Block.__(0, ["x"])
-      ])
-  ]);
-
 function starter(f) {
   var badPrinter = function (res) {
+    console.log("Counterexample:");
     var seq = List.find((function (s) {
             return !axiomCheck(s);
           }), res);
@@ -497,23 +497,62 @@ function starter(f) {
           }
         }), true, res);
   if (match) {
-    console.log("Tautology");
+    console.log("Sequent is general");
   } else {
     badPrinter(res);
   }
+  nodes[0] = $$Array.append(/* array */[{
+          id: 0,
+          label: seqToString(seq)
+        }], nodes[0]);
   return jsProcessor(fToSeq(f), 0);
 }
 
-starter(testFormula);
+starter(testFormula1);
 
 var data = {
   nodes: new Vis.DataSet(nodes[0]),
   edges: new Vis.DataSet(edges[0])
 };
 
-console.log(nodes[0]);
-
 var network = new Vis.Network(Caml_option.nullable_to_opt(document.getElementById("mynetwork")), data, options);
+
+var testFormula2 = /* Not */Block.__(1, [/* Or */Block.__(3, [
+        /* Implication */Block.__(4, [
+            /* And */Block.__(2, [
+                /* Var */Block.__(0, ["a"]),
+                /* Var */Block.__(0, ["b"])
+              ]),
+            /* Or */Block.__(3, [
+                /* Var */Block.__(0, ["a"]),
+                /* Var */Block.__(0, ["b"])
+              ])
+          ]),
+        /* Not */Block.__(1, [/* Var */Block.__(0, ["b"])])
+      ])]);
+
+var testFormula3 = /* And */Block.__(2, [
+    /* Implication */Block.__(4, [
+        /* Or */Block.__(3, [
+            /* Var */Block.__(0, ["x"]),
+            /* Var */Block.__(0, ["y"])
+          ]),
+        /* And */Block.__(2, [
+            /* Var */Block.__(0, ["x"]),
+            /* Var */Block.__(0, ["y"])
+          ])
+      ]),
+    /* And */Block.__(2, [
+        /* Implication */Block.__(4, [
+            /* Var */Block.__(0, ["x"]),
+            /* Var */Block.__(0, ["y"])
+          ]),
+        /* Or */Block.__(3, [
+            /* Var */Block.__(0, ["x"]),
+            /* Var */Block.__(0, ["y"])
+          ])
+      ])
+  ]);
 
 var allRulesTestingSequent = /* record */[
   /* left : :: */[
@@ -571,6 +610,9 @@ var allRulesTestingSequent = /* record */[
 exports.nodes = nodes;
 exports.edges = edges;
 exports.options = options;
+exports.testFormula1 = testFormula1;
+exports.testFormula2 = testFormula2;
+exports.testFormula3 = testFormula3;
 exports.join = join;
 exports.fToSeq = fToSeq;
 exports.seqToString = seqToString;
@@ -586,7 +628,6 @@ exports.allRulesTestingSequent = allRulesTestingSequent;
 exports.c = c;
 exports.count = count;
 exports.jsProcessor = jsProcessor;
-exports.testFormula = testFormula;
 exports.starter = starter;
 exports.data = data;
 exports.network = network;
