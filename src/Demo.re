@@ -62,23 +62,23 @@ type sequent = {
 };
 
 /*The Formula*/
-let testFormula1 =
+
+let testFormulas = [|
   Implication(
     And(Or(Var("x"), Var("x")), Or(Var("x"), Var("x"))),
     Or(Var("x"), Var("x")),
-  );
-let testFormula2 =
+  ),
   Not(
     Or(
       Implication(And(Var("a"), Var("b")), Or(Var("a"), Var("b"))),
       Not(Var("b")),
     ),
-  );
-let testFormula3 =
+  ),
   And(
     Implication(Or(Var("x"), Var("y")), And(Var("x"), Var("y"))),
     And(Implication(Var("x"), Var("y")), Or(Var("x"), Var("y"))),
-  );
+  ),
+|];
 
 /* Stolen from SO */
 let rec join = (char: string, list: list(string)): string => {
@@ -313,7 +313,8 @@ let starter = (f: formula) => {
 
   jsProcessor(fToSeq(f), 0);
 };
-starter(testFormula1);
+/*I have three examples*/
+starter(testFormulas[0]);
 
 let data = {
   "nodes": createDataset(nodes^),

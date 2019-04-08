@@ -5,6 +5,7 @@ var Vis = require("vis");
 var List = require("bs-platform/lib/js/list.js");
 var $$Array = require("bs-platform/lib/js/array.js");
 var Block = require("bs-platform/lib/js/block.js");
+var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Caml_option = require("bs-platform/lib/js/caml_option.js");
 
 var nodes = /* record */[/* contents : array */[]];
@@ -28,22 +29,59 @@ var options = {
   }
 };
 
-var testFormula1 = /* Implication */Block.__(4, [
-    /* And */Block.__(2, [
-        /* Or */Block.__(3, [
-            /* Var */Block.__(0, ["x"]),
-            /* Var */Block.__(0, ["x"])
-          ]),
-        /* Or */Block.__(3, [
-            /* Var */Block.__(0, ["x"]),
-            /* Var */Block.__(0, ["x"])
-          ])
-      ]),
-    /* Or */Block.__(3, [
-        /* Var */Block.__(0, ["x"]),
-        /* Var */Block.__(0, ["x"])
-      ])
-  ]);
+var testFormulas = /* array */[
+  /* Implication */Block.__(4, [
+      /* And */Block.__(2, [
+          /* Or */Block.__(3, [
+              /* Var */Block.__(0, ["x"]),
+              /* Var */Block.__(0, ["x"])
+            ]),
+          /* Or */Block.__(3, [
+              /* Var */Block.__(0, ["x"]),
+              /* Var */Block.__(0, ["x"])
+            ])
+        ]),
+      /* Or */Block.__(3, [
+          /* Var */Block.__(0, ["x"]),
+          /* Var */Block.__(0, ["x"])
+        ])
+    ]),
+  /* Not */Block.__(1, [/* Or */Block.__(3, [
+          /* Implication */Block.__(4, [
+              /* And */Block.__(2, [
+                  /* Var */Block.__(0, ["a"]),
+                  /* Var */Block.__(0, ["b"])
+                ]),
+              /* Or */Block.__(3, [
+                  /* Var */Block.__(0, ["a"]),
+                  /* Var */Block.__(0, ["b"])
+                ])
+            ]),
+          /* Not */Block.__(1, [/* Var */Block.__(0, ["b"])])
+        ])]),
+  /* And */Block.__(2, [
+      /* Implication */Block.__(4, [
+          /* Or */Block.__(3, [
+              /* Var */Block.__(0, ["x"]),
+              /* Var */Block.__(0, ["y"])
+            ]),
+          /* And */Block.__(2, [
+              /* Var */Block.__(0, ["x"]),
+              /* Var */Block.__(0, ["y"])
+            ])
+        ]),
+      /* And */Block.__(2, [
+          /* Implication */Block.__(4, [
+              /* Var */Block.__(0, ["x"]),
+              /* Var */Block.__(0, ["y"])
+            ]),
+          /* Or */Block.__(3, [
+              /* Var */Block.__(0, ["x"]),
+              /* Var */Block.__(0, ["y"])
+            ])
+        ])
+    ])
+];
 
 function join($$char, list) {
   if (list) {
@@ -508,7 +546,7 @@ function starter(f) {
   return jsProcessor(fToSeq(f), 0);
 }
 
-starter(testFormula1);
+starter(Caml_array.caml_array_get(testFormulas, 0));
 
 var data = {
   nodes: new Vis.DataSet(nodes[0]),
@@ -516,43 +554,6 @@ var data = {
 };
 
 var network = new Vis.Network(Caml_option.nullable_to_opt(document.getElementById("mynetwork")), data, options);
-
-var testFormula2 = /* Not */Block.__(1, [/* Or */Block.__(3, [
-        /* Implication */Block.__(4, [
-            /* And */Block.__(2, [
-                /* Var */Block.__(0, ["a"]),
-                /* Var */Block.__(0, ["b"])
-              ]),
-            /* Or */Block.__(3, [
-                /* Var */Block.__(0, ["a"]),
-                /* Var */Block.__(0, ["b"])
-              ])
-          ]),
-        /* Not */Block.__(1, [/* Var */Block.__(0, ["b"])])
-      ])]);
-
-var testFormula3 = /* And */Block.__(2, [
-    /* Implication */Block.__(4, [
-        /* Or */Block.__(3, [
-            /* Var */Block.__(0, ["x"]),
-            /* Var */Block.__(0, ["y"])
-          ]),
-        /* And */Block.__(2, [
-            /* Var */Block.__(0, ["x"]),
-            /* Var */Block.__(0, ["y"])
-          ])
-      ]),
-    /* And */Block.__(2, [
-        /* Implication */Block.__(4, [
-            /* Var */Block.__(0, ["x"]),
-            /* Var */Block.__(0, ["y"])
-          ]),
-        /* Or */Block.__(3, [
-            /* Var */Block.__(0, ["x"]),
-            /* Var */Block.__(0, ["y"])
-          ])
-      ])
-  ]);
 
 var allRulesTestingSequent = /* record */[
   /* left : :: */[
@@ -610,9 +611,7 @@ var allRulesTestingSequent = /* record */[
 exports.nodes = nodes;
 exports.edges = edges;
 exports.options = options;
-exports.testFormula1 = testFormula1;
-exports.testFormula2 = testFormula2;
-exports.testFormula3 = testFormula3;
+exports.testFormulas = testFormulas;
 exports.join = join;
 exports.fToSeq = fToSeq;
 exports.seqToString = seqToString;
