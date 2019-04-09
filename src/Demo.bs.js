@@ -7,6 +7,9 @@ var $$Array = require("bs-platform/lib/js/array.js");
 var Block = require("bs-platform/lib/js/block.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Caml_option = require("bs-platform/lib/js/caml_option.js");
+var CamlinternalOO = require("bs-platform/lib/js/camlinternalOO.js");
+
+var shared = ["count"];
 
 var nodes = /* record */[/* contents : array */[]];
 
@@ -448,21 +451,44 @@ function axiomCheck(seq) {
               }), false, seq[/* left */0]);
 }
 
-var c = /* record */[/* contents */0];
+var $$class = CamlinternalOO.create_table(shared);
 
-function count(param) {
-  c[0] = c[0] + 1 | 0;
-  return c[0];
+var ids = CamlinternalOO.new_methods_variables($$class, shared, ["c"]);
+
+var count = ids[0];
+
+var c = ids[1];
+
+CamlinternalOO.set_method($$class, count, (function (self$1, param) {
+        self$1[c][0] = self$1[c][0] + 1 | 0;
+        return self$1[c][0];
+      }));
+
+function obj_init(env) {
+  var self = CamlinternalOO.create_object_opt(0, $$class);
+  self[c] = /* record */[/* contents */0];
+  return self;
 }
 
-function jsProcessor(_seq, _nodeId) {
+CamlinternalOO.init_class($$class);
+
+obj_init(0);
+
+var c$1 = /* record */[/* contents */0];
+
+function counter(param) {
+  c$1[0] = c$1[0] + 1 | 0;
+  return c$1[0];
+}
+
+function draw(_seq, _nodeId) {
   while(true) {
     var nodeId = _nodeId;
     var seq = _seq;
     if (isStraight(seq) || isComplicated(seq)) {
       var seqs = step(seq);
       var formulas = List.map(seqToString, seqs);
-      var c1 = count(/* () */0);
+      var c1 = counter(/* () */0);
       nodes[0] = $$Array.append(/* array */[{
               id: c1,
               label: List.hd(formulas)
@@ -471,9 +497,9 @@ function jsProcessor(_seq, _nodeId) {
               from: nodeId,
               to: c1
             }], edges[0]);
-      jsProcessor(List.hd(seqs), c1);
+      draw(List.hd(seqs), c1);
       if (List.length(formulas) === 2) {
-        var c2 = count(/* () */0);
+        var c2 = counter(/* () */0);
         nodes[0] = $$Array.append(/* array */[{
                 id: c2,
                 label: List.hd(List.tl(formulas))
@@ -535,7 +561,7 @@ function starter(f) {
           }
         }), true, res);
   if (match) {
-    console.log("Sequent is general");
+    console.log("Tautology");
   } else {
     badPrinter(res);
   }
@@ -543,10 +569,10 @@ function starter(f) {
           id: 0,
           label: seqToString(seq)
         }], nodes[0]);
-  return jsProcessor(fToSeq(f), 0);
+  return draw(fToSeq(f), 0);
 }
 
-starter(Caml_array.caml_array_get(testFormulas, 0));
+starter(Caml_array.caml_array_get(testFormulas, 2));
 
 var data = {
   nodes: new Vis.DataSet(nodes[0]),
@@ -624,10 +650,9 @@ exports.mainProcessor = mainProcessor;
 exports.step = step;
 exports.axiomCheck = axiomCheck;
 exports.allRulesTestingSequent = allRulesTestingSequent;
-exports.c = c;
-exports.count = count;
-exports.jsProcessor = jsProcessor;
+exports.counter = counter;
+exports.draw = draw;
 exports.starter = starter;
 exports.data = data;
 exports.network = network;
-/*  Not a pure module */
+/* class Not a pure module */

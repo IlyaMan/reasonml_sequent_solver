@@ -1,6 +1,3 @@
-open Array;
-open List;
-
 [@bs.deriving abstract]
 type node = {
   [@bs.as "id"]
@@ -17,9 +14,9 @@ type edge = {
 };
 type dataset;
 [@bs.module "vis"] [@bs.new]
-external createDataset: array(node) => dataset = "DataSet";
+external createNodes: array(node) => dataset = "DataSet";
 [@bs.module "vis"] [@bs.new]
-external createDataset_: array(edge) => dataset = "DataSet";
+external createEdges: array(edge) => dataset = "DataSet";
 
 let nodes: ref(array(node)) = ref([||]);
 let edges: ref(array(edge)) = ref([||]);
@@ -61,7 +58,7 @@ type sequent = {
   right: list(formula),
 };
 
-/*The Formula*/
+/*Test Formulas*/
 
 let testFormulas = [|
   Implication(
@@ -105,13 +102,13 @@ let seqToString = (seq: sequent) => {
     };
   };
 
-  let left = join(", ", map(helper, seq.left));
-  let right = join(", ", map(helper, seq.right));
+  let left = join(", ", List.map(helper, seq.left));
+  let right = join(", ", List.map(helper, seq.right));
   join(" ", [left, "|-", right]);
 };
 
 let seqsToString = (list: list(sequent)) => {
-  map(seqToString, list);
+  List.map(seqToString, list);
 };
 
 let isStraight = (seq: sequent) => {
@@ -129,8 +126,8 @@ let isStraight = (seq: sequent) => {
     | Implication(_, _) => true
     | _ => false
     };
-  exists(straightLeftChecker, seq.left)
-  || exists(straihtRightChecker, seq.right);
+  List.exists(straightLeftChecker, seq.left)
+  || List.exists(straihtRightChecker, seq.right);
 };
 
 let isComplicated = (seq: sequent) => {
@@ -148,8 +145,8 @@ let isComplicated = (seq: sequent) => {
     | _ => false
     };
 
-  exists(complicatedLeftChecker, seq.left)
-  || exists(complicatedRightChecker, seq.right);
+  List.exists(complicatedLeftChecker, seq.left)
+  || List.exists(complicatedRightChecker, seq.right);
 };
 
 /*Simplifies seq by straight rules*/
@@ -158,28 +155,35 @@ let rec straightProcessor = (seq: sequent) => {
       (acc: (list(formula), list(formula)), el: formula) => {
     let (left, toRight) = acc;
     switch (el) {
-    | Not(z) => (left, append(toRight, [z]))
-    | And(a, b) => (append(left, [a, b]), toRight)
-    | v => (append(left, [v]), toRight)
+    | Not(z) => (left, List.append(toRight, [z]))
+    | And(a, b) => (List.append(left, [a, b]), toRight)
+    | v => (List.append(left, [v]), toRight)
     };
   };
   let straightRightFolder =
       (acc: (list(formula), list(formula)), el: formula) => {
     let (toLeft, right) = acc;
     switch (el) {
-    | Not(v) => (append(toLeft, [v]), right)
-    | Or(a, b) => (toLeft, append(right, [a, b]))
-    | Implication(a, b) => (append(toLeft, [a]), append(right, [b]))
-    | v => (toLeft, append(right, [v]))
+    | Not(v) => (List.append(toLeft, [v]), right)
+    | Or(a, b) => (toLeft, List.append(right, [a, b]))
+    | Implication(a, b) => (
+        List.append(toLeft, [a]),
+        List.append(right, [b]),
+      )
+    | v => (toLeft, List.append(right, [v]))
     };
   };
 
-  let (l, toRight) = fold_left(straigthLeftFolder, ([], []), seq.left);
+  let (l, toRight) = List.fold_left(straigthLeftFolder, ([], []), seq.left);
 
   let (toLeft, r) =
-    fold_left(straightRightFolder, ([], []), append(seq.right, toRight));
+    List.fold_left(
+      straightRightFolder,
+      ([], []),
+      List.append(seq.right, toRight),
+    );
 
-  let res = {left: append(toLeft, l), right: r};
+  let res = {left: List.append(toLeft, l), right: r};
 
   if (isStraight(res)) {
     straightProcessor(res);
@@ -196,10 +200,10 @@ let complicatedProcessor = (seq: sequent) => {
     | [el, ...tail] =>
       switch (el) {
       | And(a, b) => [
-          {left: l, right: append(prev, [a, ...tail])},
-          {left: l, right: append(prev, [b, ...tail])},
+          {left: l, right: List.append(prev, [a, ...tail])},
+          {left: l, right: List.append(prev, [b, ...tail])},
         ]
-      | _ => rightIterator(append(prev, [el]), tail, l)
+      | _ => rightIterator(List.append(prev, [el]), tail, l)
       }
     };
   };
@@ -210,14 +214,14 @@ let complicatedProcessor = (seq: sequent) => {
     | [el, ...tail] =>
       switch (el) {
       | Or(a, b) => [
-          {left: append(prev, [a, ...tail]), right: r},
-          {left: append(prev, [b, ...tail]), right: r},
+          {left: List.append(prev, [a, ...tail]), right: r},
+          {left: List.append(prev, [b, ...tail]), right: r},
         ]
       | Implication(a, b) => [
-          {left: append(prev, [b, ...tail]), right: r},
-          {left: append(prev, tail), right: append(r, [a])},
+          {left: List.append(prev, [b, ...tail]), right: r},
+          {left: List.append(prev, tail), right: List.append(r, [a])},
         ]
-      | _ => leftIterator(append(prev, [el]), tail, r)
+      | _ => leftIterator(List.append(prev, [el]), tail, r)
       }
     };
   };
@@ -229,7 +233,7 @@ let rec mainProcessor = (seq: sequent) => {
   let s1 = straightProcessor(seq);
   if (isComplicated(s1)) {
     let s2 = complicatedProcessor(s1);
-    flatten(map(mainProcessor, s2));
+    List.flatten(List.map(mainProcessor, s2));
   } else {
     [s1];
   };
@@ -245,7 +249,11 @@ let step = (seq: sequent) => {
 };
 
 let axiomCheck = (seq: sequent) => {
-  fold_left((acc, x) => mem(x, seq.right) || acc, false, seq.left);
+  List.fold_left(
+    (acc, x) => List.mem(x, seq.right) || acc,
+    false,
+    seq.left,
+  );
 };
 
 let allRulesTestingSequent = {
@@ -265,62 +273,74 @@ let allRulesTestingSequent = {
   ],
 };
 
-let c = ref(0);
-let count = () => {
-  c := c^ + 1;
-  c^;
+type counter = {. count: unit => int};
+
+let counter: counter = {
+  val c = ref(0);
+  pub count = () => {
+    c := c^ + 1;
+    c^;
+  }
 };
 
-let rec jsProcessor = (seq, nodeId) =>
+let counter = {
+  let c = ref(0);
+  () => {
+    c := c^ + 1;
+    c^;
+  };
+};
+
+let rec draw = (seq, nodeId) =>
   if (isStraight(seq) || isComplicated(seq)) {
     let seqs = step(seq);
     let formulas = seqsToString(seqs);
-    let c1 = count();
+    let c1 = counter();
 
-    nodes := Array.append([|node(~id=c1, ~label=hd(formulas))|], nodes^);
+    // Make fold
+    nodes :=
+      Array.append([|node(~id=c1, ~label=List.hd(formulas))|], nodes^);
     edges := Array.append([|edge(~from=nodeId, ~to_=c1)|], edges^);
 
-    jsProcessor(hd(seqs), c1);
+    draw(List.hd(seqs), c1);
 
-    if (length(formulas) == 2) {
-      let c2 = count();
+    if (List.length(formulas) == 2) {
+      let c2 = counter();
       nodes :=
-        Array.append([|node(~id=c2, ~label=hd(tl(formulas)))|], nodes^);
+        Array.append(
+          [|node(~id=c2, ~label=List.hd(List.tl(formulas)))|],
+          nodes^,
+        );
       edges := Array.append([|edge(~from=nodeId, ~to_=c2)|], edges^);
-      jsProcessor(hd(tl(seqs)), c2);
+      draw(List.hd(List.tl(seqs)), c2);
     };
   };
 
 let starter = (f: formula) => {
   let badPrinter = res => {
     Js.log("Counterexample:");
-    let seq = find(s => !axiomCheck(s), res);
+    let seq = List.find(s => !axiomCheck(s), res);
     let helperPrinter = (num, el) =>
       switch (el) {
       | Var(e) => Js.log3(e, "=", num)
       | v => Js.log2(v, num)
       };
-    iter(helperPrinter(1), seq.left);
-    iter(helperPrinter(0), seq.right);
+    List.iter(helperPrinter(1), seq.left);
+    List.iter(helperPrinter(0), seq.right);
     Js.log("Unlisted variables (if any) may possess any value");
   };
   let seq = {left: [], right: [f]};
   let res = mainProcessor(seq);
-  fold_left((acc, seq) => axiomCheck(seq) && acc, true, res)
-    ? Js.log("Sequent is general") : badPrinter(res);
+  List.fold_left((acc, seq) => axiomCheck(seq) && acc, true, res)
+    ? Js.log("Tautology") : badPrinter(res);
 
   nodes := Array.append([|node(~id=0, ~label=seqToString(seq))|], nodes^);
 
-  jsProcessor(fToSeq(f), 0);
+  draw(fToSeq(f), 0);
 };
 /*I have three examples*/
-starter(testFormulas[0]);
+starter(testFormulas[2]);
 
-let data = {
-  "nodes": createDataset(nodes^),
-  "edges": createDataset_(edges^),
-};
+let data = {"nodes": createNodes(nodes^), "edges": createEdges(edges^)};
 
 let network = createNetwork(getElementById("mynetwork"), data, options);
-
-network;

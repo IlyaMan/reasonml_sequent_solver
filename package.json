@@ -13,7 +13,8 @@
   "license": "MIT",
   "devDependencies": {
     "bs-platform": "^5.0.0",
-    "bsb-native": "^4.0.7000"
+    "bsb-native": "^4.0.7000",
+    "cssnano": "^4.1.10"
   },
   "dependencies": {
     "dagre": "^0.8.4",
