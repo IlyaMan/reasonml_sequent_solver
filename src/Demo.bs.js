@@ -7,9 +7,6 @@ var $$Array = require("bs-platform/lib/js/array.js");
 var Block = require("bs-platform/lib/js/block.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Caml_option = require("bs-platform/lib/js/caml_option.js");
-var CamlinternalOO = require("bs-platform/lib/js/camlinternalOO.js");
-
-var shared = ["count"];
 
 var nodes = /* record */[/* contents : array */[]];
 
@@ -451,73 +448,32 @@ function axiomCheck(seq) {
               }), false, seq[/* left */0]);
 }
 
-var $$class = CamlinternalOO.create_table(shared);
-
-var ids = CamlinternalOO.new_methods_variables($$class, shared, ["c"]);
-
-var count = ids[0];
-
-var c = ids[1];
-
-CamlinternalOO.set_method($$class, count, (function (self$1, param) {
-        self$1[c][0] = self$1[c][0] + 1 | 0;
-        return self$1[c][0];
-      }));
-
-function obj_init(env) {
-  var self = CamlinternalOO.create_object_opt(0, $$class);
-  self[c] = /* record */[/* contents */0];
-  return self;
-}
-
-CamlinternalOO.init_class($$class);
-
-obj_init(0);
-
-var c$1 = /* record */[/* contents */0];
+var c = /* record */[/* contents */0];
 
 function counter(param) {
-  c$1[0] = c$1[0] + 1 | 0;
-  return c$1[0];
+  c[0] = c[0] + 1 | 0;
+  return c[0];
 }
 
-function draw(_seq, _nodeId) {
-  while(true) {
-    var nodeId = _nodeId;
-    var seq = _seq;
-    if (isStraight(seq) || isComplicated(seq)) {
-      var seqs = step(seq);
-      var formulas = List.map(seqToString, seqs);
+function draw(seq, nodeId) {
+  if (isStraight(seq) || isComplicated(seq)) {
+    var seqs = step(seq);
+    var writer = function (seq) {
       var c1 = counter(/* () */0);
       nodes[0] = $$Array.append(/* array */[{
               id: c1,
-              label: List.hd(formulas)
+              label: seqToString(seq)
             }], nodes[0]);
       edges[0] = $$Array.append(/* array */[{
               from: nodeId,
               to: c1
             }], edges[0]);
-      draw(List.hd(seqs), c1);
-      if (List.length(formulas) === 2) {
-        var c2 = counter(/* () */0);
-        nodes[0] = $$Array.append(/* array */[{
-                id: c2,
-                label: List.hd(List.tl(formulas))
-              }], nodes[0]);
-        edges[0] = $$Array.append(/* array */[{
-                from: nodeId,
-                to: c2
-              }], edges[0]);
-        _nodeId = c2;
-        _seq = List.hd(List.tl(seqs));
-        continue ;
-      } else {
-        return 0;
-      }
-    } else {
-      return 0;
-    }
-  };
+      return draw(seq, c1);
+    };
+    return List.iter(writer, seqs);
+  } else {
+    return 0;
+  }
 }
 
 function starter(f) {
@@ -655,4 +611,4 @@ exports.draw = draw;
 exports.starter = starter;
 exports.data = data;
 exports.network = network;
-/* class Not a pure module */
+/*  Not a pure module */

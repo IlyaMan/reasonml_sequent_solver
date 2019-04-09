@@ -275,14 +275,6 @@ let allRulesTestingSequent = {
 
 type counter = {. count: unit => int};
 
-let counter: counter = {
-  val c = ref(0);
-  pub count = () => {
-    c := c^ + 1;
-    c^;
-  }
-};
-
 let counter = {
   let c = ref(0);
   () => {
@@ -294,26 +286,15 @@ let counter = {
 let rec draw = (seq, nodeId) =>
   if (isStraight(seq) || isComplicated(seq)) {
     let seqs = step(seq);
-    let formulas = seqsToString(seqs);
-    let c1 = counter();
-
-    // Make fold
-    nodes :=
-      Array.append([|node(~id=c1, ~label=List.hd(formulas))|], nodes^);
-    edges := Array.append([|edge(~from=nodeId, ~to_=c1)|], edges^);
-
-    draw(List.hd(seqs), c1);
-
-    if (List.length(formulas) == 2) {
-      let c2 = counter();
+    let writer = seq => {
+      let c1 = counter();
       nodes :=
-        Array.append(
-          [|node(~id=c2, ~label=List.hd(List.tl(formulas)))|],
-          nodes^,
-        );
-      edges := Array.append([|edge(~from=nodeId, ~to_=c2)|], edges^);
-      draw(List.hd(List.tl(seqs)), c2);
+        Array.append([|node(~id=c1, ~label=seqToString(seq))|], nodes^);
+      edges := Array.append([|edge(~from=nodeId, ~to_=c1)|], edges^);
+      draw(seq, c1);
     };
+
+    List.iter(writer, seqs);
   };
 
 let starter = (f: formula) => {
@@ -338,6 +319,7 @@ let starter = (f: formula) => {
 
   draw(fToSeq(f), 0);
 };
+
 /*I have three examples*/
 starter(testFormulas[2]);
 
