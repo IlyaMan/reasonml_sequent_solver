@@ -1,5 +1,3 @@
-/*Скипни до следующего коментария, этот блок про графику, тебе не поможет*/
-
 [@bs.deriving abstract]
 type node = {
   [@bs.as "id"]
@@ -49,8 +47,6 @@ type element;
 [@bs.val] [@bs.return nullable] [@bs.scope "document"]
 external getElementById: string => option(element) = "getElementById";
 
-/*Поехали*/
-
 type formula =
   | Var(string)
   | Not(formula)
@@ -92,7 +88,6 @@ let rec join = (char: string, list: list(string)): string => {
 let fToSeq = f => {
   {left: [], right: [f]};
 };
-/**/
 
 let seqToString = (seq: sequent) => {
   let rec helper = formula => {
@@ -114,7 +109,6 @@ let seqsToString = (list: list(sequent)) => {
   List.map(seqToString, list);
 };
 
-/*Проверяю, можно ли развернуть секвенцию простыми преобразованиями (Без ветвления)*/
 let isStraight = (seq: sequent) => {
   /*Checks if seq may be simplified by straight rules*/
   let straightLeftChecker = a =>
@@ -133,7 +127,7 @@ let isStraight = (seq: sequent) => {
   List.exists(straightLeftChecker, seq.left)
   || List.exists(straihtRightChecker, seq.right);
 };
-/*Проверяю, можно ли развернуть секвенцию преобразованиями с ветвлением*/
+
 let isComplicated = (seq: sequent) => {
   /*Checks if seq may be simplified by branching rules*/
   let complicatedLeftChecker = (f: formula) =>
@@ -232,7 +226,6 @@ let complicatedProcessor = (seq: sequent) => {
   leftIterator([], seq.left, seq.right);
 };
 
-/*Это основная функция, именно она отвечает за получение результата*/
 /*Recursive combination of processors*/
 let rec mainProcessor = (seq: sequent) => {
   let s1 = straightProcessor(seq);
@@ -253,7 +246,6 @@ let step = (seq: sequent) => {
   };
 };
 
-/*Проверка на наличие одинаковых формул с разных сторон секвенции*/
 let axiomCheck = (seq: sequent) => {
   List.fold_left(
     (acc, x) => List.mem(x, seq.right) || acc,
@@ -279,7 +271,6 @@ let allRulesTestingSequent = {
   ],
 };
 
-/*Счетчик тоже для рисования*/
 let counter = {
   let c = ref(0);
   () => {
@@ -288,7 +279,6 @@ let counter = {
   };
 };
 
-/*Ну ты понял, тут я рисую, основная логика рекурсии как в mainProcessor*/
 let rec draw = (seq, nodeId) =>
   if (isStraight(seq) || isComplicated(seq)) {
     let seqs = step(seq);
@@ -303,7 +293,6 @@ let rec draw = (seq, nodeId) =>
     List.iter(writer, seqs);
   };
 
-/*Отсюда начинаю, делаю секвенцию из формулы и запускаю рекурсию*/
 let starter = (f: formula) => {
   let badPrinter = res => {
     Js.log("Counterexample:");
@@ -321,7 +310,6 @@ let starter = (f: formula) => {
   let res = mainProcessor(seq);
   List.fold_left((acc, seq) => axiomCheck(seq) && acc, true, res)
     ? Js.log("Tautology") : badPrinter(res);
-  /*Осторожно, графика*/
   nodes := Array.append([|node(~id=0, ~label=seqToString(seq))|], nodes^);
 
   draw(fToSeq(f), 0);
@@ -330,7 +318,6 @@ let starter = (f: formula) => {
 /*I have three examples*/
 starter(testFormulas[2]);
 
-/*Графика*/
 let data = {"nodes": createNodes(nodes^), "edges": createEdges(edges^)};
 
 let network = createNetwork(getElementById("mynetwork"), data, options);
