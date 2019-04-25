@@ -80,6 +80,103 @@ var testFormulas = /* array */[
               /* Var */Block.__(0, ["y"])
             ])
         ])
+    ]),
+  /* And */Block.__(2, [
+      /* Or */Block.__(3, [
+          /* And */Block.__(2, [
+              /* Or */Block.__(3, [
+                  /* And */Block.__(2, [
+                      /* Or */Block.__(3, [
+                          /* And */Block.__(2, [
+                              /* Or */Block.__(3, [
+                                  /* And */Block.__(2, [
+                                      /* Or */Block.__(3, [
+                                          /* And */Block.__(2, [
+                                              /* Or */Block.__(3, [
+                                                  /* And */Block.__(2, [
+                                                      /* Or */Block.__(3, [
+                                                          /* And */Block.__(2, [
+                                                              /* Or */Block.__(3, [
+                                                                  /* Var */Block.__(0, ["p"]),
+                                                                  /* Implication */Block.__(4, [
+                                                                      /* Var */Block.__(0, ["das"]),
+                                                                      /* And */Block.__(2, [
+                                                                          /* Not */Block.__(1, [/* Var */Block.__(0, ["p"])]),
+                                                                          /* Var */Block.__(0, ["q"])
+                                                                        ])
+                                                                    ])
+                                                                ]),
+                                                              /* Var */Block.__(0, ["q"])
+                                                            ]),
+                                                          /* Implication */Block.__(4, [
+                                                              /* Var */Block.__(0, ["das"]),
+                                                              /* And */Block.__(2, [
+                                                                  /* Not */Block.__(1, [/* Var */Block.__(0, ["p"])]),
+                                                                  /* Var */Block.__(0, ["q"])
+                                                                ])
+                                                            ])
+                                                        ]),
+                                                      /* Var */Block.__(0, ["q"])
+                                                    ]),
+                                                  /* Implication */Block.__(4, [
+                                                      /* Var */Block.__(0, ["das"]),
+                                                      /* And */Block.__(2, [
+                                                          /* Not */Block.__(1, [/* Var */Block.__(0, ["p"])]),
+                                                          /* Var */Block.__(0, ["q"])
+                                                        ])
+                                                    ])
+                                                ]),
+                                              /* Var */Block.__(0, ["q"])
+                                            ]),
+                                          /* Implication */Block.__(4, [
+                                              /* Var */Block.__(0, ["das"]),
+                                              /* And */Block.__(2, [
+                                                  /* Not */Block.__(1, [/* Var */Block.__(0, ["p"])]),
+                                                  /* Var */Block.__(0, ["q"])
+                                                ])
+                                            ])
+                                        ]),
+                                      /* Var */Block.__(0, ["q"])
+                                    ]),
+                                  /* Implication */Block.__(4, [
+                                      /* Var */Block.__(0, ["das"]),
+                                      /* And */Block.__(2, [
+                                          /* Not */Block.__(1, [/* Var */Block.__(0, ["p"])]),
+                                          /* Var */Block.__(0, ["q"])
+                                        ])
+                                    ])
+                                ]),
+                              /* Var */Block.__(0, ["q"])
+                            ]),
+                          /* Implication */Block.__(4, [
+                              /* Var */Block.__(0, ["das"]),
+                              /* And */Block.__(2, [
+                                  /* Not */Block.__(1, [/* Var */Block.__(0, ["p"])]),
+                                  /* Var */Block.__(0, ["q"])
+                                ])
+                            ])
+                        ]),
+                      /* Var */Block.__(0, ["q"])
+                    ]),
+                  /* Implication */Block.__(4, [
+                      /* Var */Block.__(0, ["das"]),
+                      /* And */Block.__(2, [
+                          /* Not */Block.__(1, [/* Var */Block.__(0, ["p"])]),
+                          /* Var */Block.__(0, ["q"])
+                        ])
+                    ])
+                ]),
+              /* Var */Block.__(0, ["q"])
+            ]),
+          /* Implication */Block.__(4, [
+              /* Var */Block.__(0, ["das"]),
+              /* And */Block.__(2, [
+                  /* Not */Block.__(1, [/* Var */Block.__(0, ["p"])]),
+                  /* Var */Block.__(0, ["q"])
+                ])
+            ])
+        ]),
+      /* Var */Block.__(0, ["q"])
     ])
 ];
 
@@ -528,7 +625,7 @@ function starter(f) {
   return draw(fToSeq(f), 0);
 }
 
-starter(Caml_array.caml_array_get(testFormulas, 2));
+starter(Caml_array.caml_array_get(testFormulas, 1));
 
 var data = {
   nodes: new Vis.DataSet(nodes[0]),
